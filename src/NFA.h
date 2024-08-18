@@ -10,16 +10,20 @@
 #include "globals.h"
 class DFA;
 using namespace std;
+class TreeNode {
+public:
+    TreeNode* left;
+    TreeNode* sibling;
+    string content;
+};
 class NFA {
 	friend class DFA;
 public:
 	NFA(string input);
 	bool makeNFA();
+	bool checkExpression();
 	void display() const;
 	virtual ~NFA();
-	int getStateNumber() {
-		return stateNumbers;
-	}
 private:
 	vector<State*>states;
 	int startState;
@@ -31,6 +35,9 @@ private:
 	stack<char>operStack;
 	stack<Node*>nodeStack;
 	stringstream sstream;
+    string m_input;
+    int m_next_token_location;
+    char m_next_token;
 	char letter;
 	bool flag;
 	void addEqualState(State*p, State*b) {
@@ -65,7 +72,7 @@ private:
 		return c;
 	}
 	void process();
-	int comPri(char c) {
+	static int comPri(char c) {
 		switch (c) {
 		case '#':
 			return 0;
@@ -83,7 +90,7 @@ private:
 			return 0;
 		}
 	}
-	int inPri(char c) {
+	static int inPri(char c) {
 		switch (c) {
 		case '#':
 			return 0;
@@ -101,5 +108,37 @@ private:
 			return 0;
 		}
 	}
+    /*
+    <expr> -> <term> { | <term> }
+    <term> -> <factor> { <factor> }
+    <factor> -> <element> [*]
+    <element> -> <expr> | letter(contain digit)
+    */
+    TreeNode* expr(void);
+    TreeNode* term(void);
+    TreeNode* factor(void);
+    TreeNode* element(void);
+    void error(void) {
+        cerr << "Error[m_next_token:" << m_next_token <<"]" << endl;
+        exit(1);
+    }
+    void match(char expectedToken) {
+        if(m_next_token == expectedToken) {
+            cout << m_next_token << " matched" << endl;
+            m_next_token = get_next_token();
+        } else {
+            error();
+        }
+    }
+    char get_next_token() {
+        ++m_next_token_location;
+        if(m_next_token_location < m_input.size()) {
+            m_next_token = m_input[m_next_token_location];
+            return m_next_token;
+        } else {
+            m_next_token = ' ';
+        }
+        return ' ';
+    }
 };
 #endif /*NFA_H_*/

@@ -2,7 +2,7 @@
 int NFA::NOTCHAR=-2;
 int NFA::END=-1;
 NFA::NFA(string input) :
-	startState(0), stateNumbers(-1), sstream(input+"#"), flag(false) {
+	startState(0), stateNumbers(-1), sstream(input+"#"), flag(false), m_next_token(input[0]),m_input(input),m_next_token_location(0) {
 	operStack.push('#');
 }
 bool NFA::makeNFA() {
@@ -11,7 +11,6 @@ bool NFA::makeNFA() {
 		if (c==NOTCHAR) {
 			process();
 		} else {
-			alphabet.insert(c);
 			if (TRACENFA)
 				cout<<"this is a letter "<<c<<endl;
 
@@ -21,7 +20,16 @@ bool NFA::makeNFA() {
 			State*q=new State(++stateNumbers);
 			states.push_back(q);
 
-			p->addDestState(c, stateNumbers);
+            if (c != '.') {
+                    alphabet.insert(c);
+                    p->addDestState(c, stateNumbers);
+            } else {
+                for (int a = 'A'; a <= 'Z'; ++a) {
+                    alphabet.insert(a);
+                    p->addDestState(a, stateNumbers);
+                    alphabet.insert(a + 'a' - 'A');
+                    p->addDestState(a + 'a' - 'A', stateNumbers); }
+            }
 			nodeStack.push(new Node(stateNumbers-1,stateNumbers));
 			endState=stateNumbers;
 		}
@@ -133,6 +141,71 @@ void NFA::display() const {
 		cout<<endl;
 	}
 	cout<<"*********************"<<endl;
+}
+bool NFA::checkExpression() {
+    TreeNode* node = expr();
+    cout << "checkExpression:" << node->content << endl;
+    return m_next_token_location == m_input.size();
+}
+/*
+<expr> -> <term> { | <term> }
+<term> -> <factor> { <factor> }
+<factor> -> <element> [*]
+<element> -> (<expr>) | letter(contain digit)
+*/
+TreeNode* NFA::expr(void) {
+    TreeNode* node = new TreeNode();
+    TreeNode* t1 = term();
+    node->content += t1->content;
+    while(m_next_token == '|') {
+        match('|');
+        node->content += '|';
+        TreeNode* t2 = term();
+        node->content += t2->content;
+    }
+    cout << "expr:" << node->content << endl;
+    return node;
+}
+TreeNode* NFA::term(void) {
+    TreeNode* node = new TreeNode();
+    TreeNode* f1 = factor();
+    node->content += f1->content;
+    while(m_next_token == '(' || isalnum(m_next_token) || m_next_token == '.') {
+        TreeNode* f2 = factor();
+        node->content += f2->content;
+    }
+    cout << "term:" << node->content << endl;
+    return node;
+}
+TreeNode* NFA::factor(void) {
+    TreeNode* node = new TreeNode();
+    TreeNode* e1 = element();
+    node->content += e1->content;
+    while (m_next_token == '*') {
+        match('*');
+        node->content += '*';
+    }
+    cout << "factor:" << node->content << endl;
+    return node;
+}
+TreeNode* NFA::element(void) {
+    TreeNode* node = new TreeNode();
+    if(m_next_token == '(') {
+        match('(');
+        node->content += '(';
+        TreeNode* e1 = expr();
+        node->content += e1->content;
+        match(')');
+        node->content += ')';
+    } else if (isalnum(m_next_token) || m_next_token == '.' ) {
+        node->content += m_next_token;
+        match(m_next_token);
+    } else {
+        error();
+        return node;
+    }
+    cout << "element:" << node->content <<endl;
+    return node;
 }
 NFA::~NFA() {
 }

@@ -11,16 +11,18 @@ public:
 		minidfa(m) {
 		state=m.startState;
 	}
-	void read(string s) {
+	bool match(string s) {
 		for (size_t i=0; i<s.size(); i++) {
 			readIn(s[i]);
 		}
 
 		//if the end of the state is not in the endStates
 		if (minidfa.endStates.find(state)==minidfa.endStates.end()) {
-			cerr<<endl<<"ERROR"<<endl;
+			cerr<<endl<<"ERROR(match failed)"<<endl;
+            return false;
 		} else {
 			cout<<endl<<"RIGHT"<<endl;
+            return true;
 		}
 	}
 	void readIn(char c) {
