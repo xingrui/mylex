@@ -57,7 +57,7 @@ void DFA::process(int current, set<int>&s, char c) {
 		if (TRACEDFA)
 			cout<<"end "<<endl;
 	}
-	if (!temp.empty())
+	if (!temp.empty()) { 
 		if (!hasState(temp)) {
 			if (TRACEDFA)
 				cout<<"ADDING STATES"<<endl;
@@ -70,6 +70,7 @@ void DFA::process(int current, set<int>&s, char c) {
 		} else {
 			states[current]->addDestState(c, getCurrent());
 		}
+    }
 }
 DFA::~DFA() {
 }

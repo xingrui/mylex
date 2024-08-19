@@ -10,11 +10,25 @@
 #include "globals.h"
 class DFA;
 using namespace std;
+enum NodeType {
+    OpNode,
+    ValueNode
+};
+enum OpType {
+    OpOR,
+    OpConcat,
+    OpStar
+};
 class TreeNode {
 public:
     TreeNode* left;
-    TreeNode* sibling;
-    string content;
+    TreeNode* right;
+    NodeType nodeType;
+    union Data{
+    OpType opType;
+    char value;
+    };
+    Data data;
 };
 class NFA {
 	friend class DFA;
@@ -140,5 +154,6 @@ private:
         }
         return ' ';
     }
+    void printTree(TreeNode* treeNode, int level) const;
 };
 #endif /*NFA_H_*/

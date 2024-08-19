@@ -1,6 +1,18 @@
 #include "NFA.h"
+#include<queue>
+using namespace std;
 int NFA::NOTCHAR=-2;
 int NFA::END=-1;
+const char *indent(int x) {
+      x*=2;
+      char *p=new char[x];
+      for (int i=0;i<x;i++){
+            p[i]=*(" ");
+      }
+      p[x]='\0';
+      return p;
+}
+
 NFA::NFA(string input) :
 	startState(0), stateNumbers(-1), sstream(input+"#"), flag(false), m_next_token(input[0]),m_input(input),m_next_token_location(0) {
 	operStack.push('#');
@@ -144,7 +156,7 @@ void NFA::display() const {
 }
 bool NFA::checkExpression() {
     TreeNode* node = expr();
-    cout << "checkExpression:" << node->content << endl;
+    printTree(node, 0);
     return m_next_token_location == m_input.size();
 }
 /*
@@ -154,58 +166,73 @@ bool NFA::checkExpression() {
 <element> -> (<expr>) | letter(contain digit)
 */
 TreeNode* NFA::expr(void) {
-    TreeNode* node = new TreeNode();
-    TreeNode* t1 = term();
-    node->content += t1->content;
+    TreeNode* left = term();
     while(m_next_token == '|') {
+        TreeNode* node = new TreeNode();
+        node->nodeType = NodeType::OpNode;
+        node->data.opType = OpType::OpOR;
+        node->left = left;
         match('|');
-        node->content += '|';
-        TreeNode* t2 = term();
-        node->content += t2->content;
+        node->right = term();
+        left = node;
     }
-    cout << "expr:" << node->content << endl;
-    return node;
+    return left;
 }
 TreeNode* NFA::term(void) {
-    TreeNode* node = new TreeNode();
-    TreeNode* f1 = factor();
-    node->content += f1->content;
+    TreeNode* left = factor();
     while(m_next_token == '(' || isalnum(m_next_token) || m_next_token == '.') {
-        TreeNode* f2 = factor();
-        node->content += f2->content;
+        TreeNode* node = new TreeNode();
+        node->nodeType = NodeType::OpNode;
+        node->data.opType = OpType::OpConcat;
+        node->left = left;
+        node->right = factor();
+        left = node;
     }
-    cout << "term:" << node->content << endl;
-    return node;
+    return left;
 }
 TreeNode* NFA::factor(void) {
-    TreeNode* node = new TreeNode();
-    TreeNode* e1 = element();
-    node->content += e1->content;
+    TreeNode* left = element();
     while (m_next_token == '*') {
         match('*');
-        node->content += '*';
+        TreeNode* node = new TreeNode();
+        node->left = left;
+        node->nodeType = NodeType::OpNode;
+        node->data.opType = OpType::OpStar;
+        left = node;
     }
-    cout << "factor:" << node->content << endl;
-    return node;
+    return left;
 }
 TreeNode* NFA::element(void) {
-    TreeNode* node = new TreeNode();
+    TreeNode* node = NULL;
     if(m_next_token == '(') {
         match('(');
-        node->content += '(';
-        TreeNode* e1 = expr();
-        node->content += e1->content;
+        node = expr();
         match(')');
-        node->content += ')';
     } else if (isalnum(m_next_token) || m_next_token == '.' ) {
-        node->content += m_next_token;
+        node = new TreeNode();
+        node->data.value = m_next_token;
+        node->nodeType = ValueNode;
         match(m_next_token);
     } else {
         error();
         return node;
     }
-    cout << "element:" << node->content <<endl;
     return node;
+}
+void NFA::printTree(TreeNode* current, int level) const {
+    if(current == NULL) return;
+    switch(current->nodeType) {
+        case NodeType::OpNode:
+            cout << indent(level) << "OpType:" << current->data.opType << endl;
+            break;
+        case NodeType::ValueNode:
+            cout << indent(level) << "Value:" << current->data.value << endl;
+            break;
+        default:
+            break;
+    }
+    printTree(current->left, level + 1);
+    printTree(current->right, level + 1);
 }
 NFA::~NFA() {
 }
