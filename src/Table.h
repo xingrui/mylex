@@ -21,17 +21,16 @@ public:
 			cerr<<endl<<"ERROR(match failed)"<<endl;
             return false;
 		} else {
-			cout<<endl<<"RIGHT"<<endl;
             return true;
 		}
 	}
 	void readIn(char c) {
-		cout<<c;
+		// cout<<c;
 		map<char,int>* mystate = &(minidfa.states[state]->stateChange);
 		map<char,int>::iterator it;
 		it = mystate->find(c);
 		if (it==mystate->end()) {
-			cerr<<"ERROR"<<endl;
+			// cerr<<"ERROR"<<endl;
 		} else {
 			state=it->second;
 		}

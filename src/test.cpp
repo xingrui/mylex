@@ -7,12 +7,12 @@ using namespace std;
 int match(string pattern, string content) {
 	NFA nfa(pattern);
     bool result = nfa.checkExpression();
-    cout << "checkExpression result:[" << result << "]" << endl;
+    cout << "checkExpression pattern:[" << pattern << "] result:[" << result << "]" << endl;
     if(!result){
           return 1;
     }
 	nfa.makeNFA();
-	nfa.display();
+	//nfa.display();
 	DFA dfa(nfa);
 	//dfa.display();
 	MiniDFA minidfa(dfa);
@@ -23,9 +23,8 @@ int match(string pattern, string content) {
 
 int main(int argc, char **argv){
     if (argc == 3) {
-        cout << argv[1] << endl;
-        cout << argv[2] << endl;
-        cout << match(argv[1], argv[2]) << endl;
+        bool match_result = match(argv[1], argv[2]);
+        cout << "pattern:[" << argv[1]<< "] string:[" << argv[2] << "] matchresult:[" << match_result << "]" << endl;
         return 0;
     }
     //cout << match("(a|b)*abb", "abbbbbbabb") << endl;

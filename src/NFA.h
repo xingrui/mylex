@@ -29,6 +29,34 @@ public:
     char value;
     };
     Data data;
+    static int findDepth(TreeNode* node) {
+        if(node == NULL) return 0;
+        int left = findDepth(node->left);
+        int right = findDepth(node->right);
+        return left > right ? left + 1 : right + 1;
+    }
+    static char staticToChar(TreeNode*node) {
+        if(node == NULL) return '_';
+        return node->toChar();
+    }
+    char toChar() const {
+        switch(nodeType) {
+            case OpNode:
+                switch(data.opType) {
+                    case OpType::OpOR:
+                        return '|';
+                    case OpType::OpConcat:
+                        return '+';
+                    case OpType::OpStar:
+                        return '*';
+                    default:
+                        return ' ';
+                }
+                break;
+            case ValueNode:
+                return data.value;
+        }
+    }
 };
 class NFA {
 	friend class DFA;
@@ -138,7 +166,7 @@ private:
     }
     void match(char expectedToken) {
         if(m_next_token == expectedToken) {
-            cout << m_next_token << " matched" << endl;
+            // cout << m_next_token << " matched" << endl;
             m_next_token = get_next_token();
         } else {
             error();
@@ -154,6 +182,7 @@ private:
         }
         return ' ';
     }
+    void printTreeNew(TreeNode* treeNode, int depth) const;
     void printTree(TreeNode* treeNode, int level) const;
 };
 #endif /*NFA_H_*/

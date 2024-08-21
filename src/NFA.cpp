@@ -3,15 +3,6 @@
 using namespace std;
 int NFA::NOTCHAR=-2;
 int NFA::END=-1;
-const char *indent(int x) {
-      x*=2;
-      char *p=new char[x];
-      for (int i=0;i<x;i++){
-            p[i]=*(" ");
-      }
-      p[x]='\0';
-      return p;
-}
 
 NFA::NFA(string input) :
 	startState(0), stateNumbers(-1), sstream(input+"#"), flag(false), m_next_token(input[0]),m_input(input),m_next_token_location(0) {
@@ -156,7 +147,8 @@ void NFA::display() const {
 }
 bool NFA::checkExpression() {
     TreeNode* node = expr();
-    printTree(node, 0);
+    int depth = TreeNode::findDepth(node);
+    printTreeNew(node, depth);
     return m_next_token_location == m_input.size();
 }
 /*
@@ -219,18 +211,38 @@ TreeNode* NFA::element(void) {
     }
     return node;
 }
+void NFA::printTreeNew(TreeNode* current, int depth) const {
+    std::queue<TreeNode*> q;
+    q.push(current);
+    ostringstream ss;
+    ss << string((1<<depth) - 1, '=') << endl;
+    for(int i = 0; i < depth; ++i) {
+        string str((1 << depth ) - 1, ' ');
+        std::queue<TreeNode*> temp_q;
+        int current = (1 << (depth - i - 1))-1;
+        int step = 1 << (depth - i);
+        while(!q.empty()){
+            TreeNode* c = q.front();
+            q.pop();
+            str[current] = TreeNode::staticToChar(c);
+            current += step;
+            if (c == NULL) {
+                temp_q.push(NULL);
+                temp_q.push(NULL);
+            } else {
+                temp_q.push(c->left);
+                temp_q.push(c->right);
+            }
+        }
+        q.swap(temp_q);
+        ss<<str<<endl;
+    }
+    ss << string((1<<depth) - 1, '=') << endl;
+    cout << ss.str();
+}
 void NFA::printTree(TreeNode* current, int level) const {
     if(current == NULL) return;
-    switch(current->nodeType) {
-        case NodeType::OpNode:
-            cout << indent(level) << "OpType:" << current->data.opType << endl;
-            break;
-        case NodeType::ValueNode:
-            cout << indent(level) << "Value:" << current->data.value << endl;
-            break;
-        default:
-            break;
-    }
+    cout << string(level, ' ') << current->toChar() << endl;
     printTree(current->left, level + 1);
     printTree(current->right, level + 1);
 }
