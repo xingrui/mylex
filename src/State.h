@@ -4,6 +4,7 @@
 #include<set>
 using namespace std;
 class State {
+    static int s_stateNumbers;
 public:
     multimap<char, int>stateChange;
     set<int> equalStates;
@@ -11,6 +12,10 @@ public:
     State(int s) :
         state(s) {
         equalStates.insert(s);
+    }
+
+    State(): state(s_stateNumbers++) {
+        equalStates.insert(state);
     }
 
     void addDestState(char c, int state) {
