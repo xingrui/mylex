@@ -12,10 +12,9 @@ class DFA {
     vector<set<int> >myStates;
     vector<DFAState *>states;
     set<int>endStates;
-    size_t currentLocation;
     size_t current;
     const int startState;
-    set<char>alphabet;
+    const set<char> &alphabet;
     int getCurrent() const {
         return current;
     }
@@ -50,8 +49,7 @@ class DFA {
     void process(int, set<int> &s, char c);
 public:
     DFA(NFA &a) :
-        nfa(a), stateNumbers(-1), startState(0), alphabet(a.alphabet) {
-        currentLocation = 0;
+        nfa(a), stateNumbers(-1), startState(0), alphabet(a.getAlphabet()) {
         makeDFA();
     }
 

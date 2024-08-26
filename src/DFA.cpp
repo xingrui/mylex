@@ -2,19 +2,21 @@
 
 void DFA::makeDFA() {
     getEqualStates();
-    State*p = nfa.states[nfa.startState];
+    State*p = nfa.getStates()[nfa.getStartState()];
     myStates.push_back(p->equalStates);
     states.push_back(new DFAState(++stateNumbers));
 
     if (TRACEDFA)
         cout << endl;
 
+    size_t currentLocation = 0;
+
     while (currentLocation < myStates.size()) {
         if (TRACEDFA)
             cout << "this is on the big state of " << currentLocation << endl;
 
-        for (set<char>::iterator it = nfa.alphabet.begin(); it
-                != nfa.alphabet.end(); it++) {
+        for (set<char>::iterator it = alphabet.begin(); it
+                != alphabet.end(); it++) {
             process(currentLocation, myStates[currentLocation], *it);
         }
 
@@ -34,14 +36,14 @@ void DFA::getEqual(State *p, set<int> &temp) {
 
         if (temp.find(t) == temp.end()) {
             temp.insert(t);
-            getEqual(nfa.states[t], temp);
+            getEqual(nfa.getStates()[t], temp);
         }
     }
 }
 
 void DFA::getEqualStates() {
-    for (size_t i = 0; i < nfa.states.size(); i++) {
-        State* sp = nfa.states[i];
+    for (size_t i = 0; i < nfa.getStates().size(); i++) {
+        State* sp = nfa.getStates()[i];
         getEqual(sp, sp->equalStates);
     }
 }
@@ -56,7 +58,7 @@ void DFA::process(int current, set<int> &s, char c) {
         cout << "size " << s.size() << endl;
 
     for (set<int>::iterator its = s.begin(); its != s.end(); its++) {
-        multimap<char, int> &stateChange = nfa.states[*its]->stateChange;
+        multimap<char, int> &stateChange = nfa.getStates()[*its]->stateChange;
         Range range = stateChange.equal_range(c);
 
         if (TRACEDFA)
@@ -66,7 +68,7 @@ void DFA::process(int current, set<int> &s, char c) {
             if (TRACEDFA)
                 cout << i->second << " ";
 
-            set<int> &vt = nfa.states[i->second]->equalStates;
+            set<int> &vt = nfa.getStates()[i->second]->equalStates;
 
             for (set<int>::iterator it = vt.begin(); it != vt.end(); it++)
                 temp.insert(*it);
@@ -84,7 +86,7 @@ void DFA::process(int current, set<int> &s, char c) {
             myStates.push_back(temp);
             states.push_back(new DFAState(++stateNumbers));
 
-            if (temp.find(nfa.endState) != temp.end()) {
+            if (temp.find(nfa.getEndState()) != temp.end()) {
                 endStates.insert(stateNumbers);
             }
 

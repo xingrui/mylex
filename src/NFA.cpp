@@ -175,7 +175,15 @@ bool NFA::checkExpression() {
     TreeNode* node = expr();
     int depth = TreeNode::findDepth(node);
     printTreeNew(node, depth);
-    return m_next_token_location == m_input.size();
+
+    if (m_next_token_location != m_input.size()) {
+        return false;
+    }
+
+    Node n = getNFANode(node);
+    startState = n.startState;
+    endState = n.destState;
+    return true;
 }
 
 /*
@@ -283,6 +291,80 @@ void NFA::printTreeNew(TreeNode *current, int depth) const {
 
     ss << string((1 << depth) - 1, '=') << endl;
     cout << ss.str();
+}
+
+NFA::Node NFA::getNFANode(TreeNode *treeNode) {
+    switch (treeNode->nodeType) {
+    case OpNode:
+        switch (treeNode->data.opType) {
+        case OpType::OpOR: {
+            Node leftNode = getNFANode(treeNode->left);
+            Node rightNode = getNFANode(treeNode->right);
+            State*p = new State(++stateNumbers);
+            states.push_back(p);
+            State*q = new State(++stateNumbers);
+            states.push_back(q);
+            p->addDestState(0, leftNode.startState);
+            p->addDestState(0, rightNode.startState);
+            states[leftNode.destState]->addDestState(0, q->state);
+            states[rightNode.destState]->addDestState(0, q->state);
+            return Node(leftNode.startState, rightNode.destState);
+        }
+
+        case OpType::OpConcat: {
+            Node leftNode = getNFANode(treeNode->left);
+            Node rightNode = getNFANode(treeNode->right);
+            states[leftNode.destState]->addDestState(0, rightNode.startState);
+            return Node(leftNode.startState, rightNode.destState);
+        }
+
+        case OpType::OpStar: {
+            Node leftNode = getNFANode(treeNode->left);
+            State*p = new State(++stateNumbers);
+            states.push_back(p);
+            State*q = new State(++stateNumbers);
+            states.push_back(q);
+            p->addDestState(0, leftNode.startState);
+            p->addDestState(0, q->state);
+            states[leftNode.destState]->addDestState(0, q->state);
+            states[leftNode.destState]->addDestState(0, leftNode.startState);
+            return Node(p->state, q->state);
+        }
+
+        default:
+            break;
+        }
+
+        break;
+
+    case ValueNode: {
+        State*p = new State(++stateNumbers);
+        states.push_back(p);
+
+        State*q = new State(++stateNumbers);
+        states.push_back(q);
+        char c = treeNode->data.value;
+
+        if (c != '.') {
+            alphabet.insert(c);
+            p->addDestState(c, q->state);
+        } else {
+            for (int a = 'A'; a <= 'Z'; ++a) {
+                alphabet.insert(a);
+                p->addDestState(a, q->state);
+                alphabet.insert(a + 'a' - 'A');
+                p->addDestState(a + 'a' - 'A', q->state);
+            }
+        }
+
+        return Node(p->state, q->state);
+    }
+
+    default:
+        break;
+    }
+
+    return Node(0, 0);
 }
 
 void NFA::printTree(TreeNode *current, int level) const {

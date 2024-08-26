@@ -13,12 +13,12 @@ int match(string pattern, string content) {
         return 1;
     }
 
-    nfa.makeNFA();
-    //nfa.display();
+    // nfa.makeNFA();
+    // nfa.display();
     DFA dfa(nfa);
-    //dfa.display();
+    // dfa.display();
     MiniDFA minidfa(dfa);
-    //minidfa.display();
+    // minidfa.display();
     Table table(minidfa);
     return table.match(content);
 }

@@ -6,7 +6,6 @@
 #include<sstream>
 #include<ctype.h>
 #include "State.h"
-#include "Node.h"
 #include "globals.h"
 class DFA;
 using namespace std;
@@ -19,6 +18,7 @@ enum OpType {
     OpConcat,
     OpStar
 };
+
 class TreeNode {
 public:
     TreeNode *left;
@@ -70,13 +70,37 @@ public:
 };
 
 class NFA {
-    friend class DFA;
+    class Node {
+    public:
+        int startState, destState;
+        Node(int start, int dest): startState(start), destState(dest) {
+
+        }
+    };
+
 public:
     NFA(string input);
     bool makeNFA();
+    Node getNFANode(TreeNode *node);
     bool checkExpression();
     void display() const;
     virtual ~NFA();
+    const vector<State *> &getStates() const {
+        return states;
+    }
+
+    int getEndState() const {
+        return endState;
+    }
+
+    int getStartState() const {
+        return startState;
+    }
+
+    const set<char> &getAlphabet() const {
+        return alphabet;
+    }
+
 private:
     vector<State *>states;
     int startState;
@@ -186,7 +210,7 @@ private:
     /*
     <expr> -> <term> { | <term> }
     <term> -> <factor> { <factor> }
-    <factor> -> <element> [*]
+    <factor> -> <element> {*}
     <element> -> <expr> | letter(contain digit)
     */
     TreeNode *expr(void);
